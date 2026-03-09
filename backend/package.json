@@ -12,7 +12,8 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "migrate": "node scripts/migrate.js",
-    "test:projects": "node tests/projects.test.js"
+    "test:projects": "node tests/projects.test.js",
+    "test:apikeys": "node tests/apikeys.test.js"
   },
   "keywords": [],
   "author": "",

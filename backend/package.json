@@ -16,7 +16,9 @@
     "test:apikeys": "node tests/apikeys.test.js",
     "test:logs": "node tests/logs.test.js",
     "webhook-worker": "node src/workers/webhook.worker.js",
-    "test:webhooks": "node tests/webhooks.test.js"
+    "test:webhooks": "node tests/webhooks.test.js",
+    "seed": "node database/seeds/dev.seed.js",
+    "test:billing": "node tests/billing.test.js"
   },
   "keywords": [],
   "author": "",

@@ -6,9 +6,11 @@
     "test": "tests"
   },
   "scripts": {
+    "test:users": "node tests/users.test.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "migrate": "node scripts/migrate.js"
   },
   "keywords": [],
   "author": "",

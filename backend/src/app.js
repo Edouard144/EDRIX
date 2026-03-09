@@ -6,6 +6,7 @@ import { CONSTANTS } from './config/constants.js';
 import { loggerMiddleware } from './middleware/logger.middleware.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 import authRoutes from './modules/auth/auth.routes.js';
+import usersRoutes from './modules/users/users.routes.js';
 
 // Import routes (we'll add these as we build each module)
 // import authRoutes from './modules/auth/auth.routes.js';
@@ -33,17 +34,30 @@ app.use(rateLimit({
   max: CONSTANTS.RATE_LIMIT_MAX_REQUESTS,
   message: { success: false, message: 'Too many requests. Slow down.' },
 }));
-app.use('/api/auth', authRoutes);
+// ── Root route
+app.get('/', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'EDRIX API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      auth: '/api/auth',
+      users: '/api/users'
+    }
+  });
+});
 
 // ── Health check (to verify server is alive)
 app.get('/health', (req, res) => {
   res.json({ success: true, message: 'EDRIX API is running' });
 });
 
-// ── Routes (uncomment as we build each module)
-// app.use('/api/auth', authRoutes);
+// ── API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
 
-// ── Catch all unknown routes
+// ── Catch all unknown routes (must be AFTER all routes)
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });
 });

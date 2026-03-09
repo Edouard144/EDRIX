@@ -6,6 +6,7 @@ import app from './src/app.js';
 import { ENV } from './src/config/env.js';
 import { initDatabase } from './src/config/database.js';
 
+
 const PORT = ENV.PORT;
 
 // Initialize database connection before starting server

@@ -8,6 +8,7 @@ import { errorMiddleware } from './middleware/error.middleware.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import usersRoutes from './modules/users/users.routes.js';
 import orgsRoutes from './modules/organizations/organizations.routes.js';
+import projectsRoutes from './modules/projects/projects.routes.js';
 
 // Import routes (we'll add these as we build each module)
 // import authRoutes from './modules/auth/auth.routes.js';
@@ -58,6 +59,7 @@ app.get('/health', (req, res) => {
 // ── API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/organizations/:orgId/projects', projectsRoutes);
 
 // ── Catch all unknown routes (must be AFTER all routes)
 app.use((req, res) => {

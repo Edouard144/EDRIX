@@ -1,6 +1,6 @@
 -- Every login creates a session
 -- Refresh tokens live here
-CREATE TABLE sessions (
+CREATE TABLE IF NOT EXISTS sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   refresh_token TEXT UNIQUE NOT NULL,

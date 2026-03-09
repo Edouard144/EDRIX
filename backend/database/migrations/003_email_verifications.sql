@@ -1,5 +1,5 @@
 -- Token sent to email to verify account
-CREATE TABLE email_verifications (
+CREATE TABLE IF NOT EXISTS email_verifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token TEXT UNIQUE NOT NULL,

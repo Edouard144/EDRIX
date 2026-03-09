@@ -22,17 +22,43 @@ async function runMigrations() {
   try {
     console.log('🔄 Running migrations...');
     
+    // Create migrations tracking table if it doesn't exist
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS migrations (
+        id SERIAL PRIMARY KEY,
+        filename VARCHAR(255) UNIQUE NOT NULL,
+        executed_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    
     const migrationsDir = path.join(__dirname, '../database/migrations');
     const files = fs.readdirSync(migrationsDir)
       .filter(f => f.endsWith('.sql'))
       .sort(); // Run in order: 001, 002, 003, etc.
     
     for (const file of files) {
+      // Check if migration already ran
+      const { rows } = await client.query(
+        'SELECT filename FROM migrations WHERE filename = $1',
+        [file]
+      );
+      
+      if (rows.length > 0) {
+        console.log(`  ⏭️  Skipping ${file} (already executed)`);
+        continue;
+      }
+      
       const filePath = path.join(migrationsDir, file);
       const sql = fs.readFileSync(filePath, 'utf8');
       
       console.log(`  ✓ Running ${file}...`);
       await client.query(sql);
+      
+      // Record that this migration ran
+      await client.query(
+        'INSERT INTO migrations (filename) VALUES ($1)',
+        [file]
+      );
     }
     
     console.log('✅ All migrations completed successfully');

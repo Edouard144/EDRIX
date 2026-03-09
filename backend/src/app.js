@@ -7,6 +7,7 @@ import { loggerMiddleware } from './middleware/logger.middleware.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import usersRoutes from './modules/users/users.routes.js';
+import orgsRoutes from './modules/organizations/organizations.routes.js';
 
 // Import routes (we'll add these as we build each module)
 // import authRoutes from './modules/auth/auth.routes.js';
@@ -27,6 +28,7 @@ app.use(express.json());
 
 // ── Log every request
 app.use(loggerMiddleware);
+app.use('/api/organizations', orgsRoutes);
 
 // ── Rate limiting — block IPs hammering the API
 app.use(rateLimit({

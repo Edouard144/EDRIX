@@ -14,7 +14,9 @@
     "migrate": "node scripts/migrate.js",
     "test:projects": "node tests/projects.test.js",
     "test:apikeys": "node tests/apikeys.test.js",
-    "test:logs": "node tests/logs.test.js"
+    "test:logs": "node tests/logs.test.js",
+    "webhook-worker": "node src/workers/webhook.worker.js",
+    "test:webhooks": "node tests/webhooks.test.js"
   },
   "keywords": [],
   "author": "",

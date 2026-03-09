@@ -11,6 +11,7 @@ import orgsRoutes from './modules/organizations/organizations.routes.js';
 import projectsRoutes from './modules/projects/projects.routes.js';
 import apikeysRoutes from './modules/apikeys/apikeys.routes.js';
 import logsRoutes from './modules/logs/logs.routes.js';
+import webhooksRoutes from './modules/webhooks/webhooks.routes.js';
 
 // Import routes (we'll add these as we build each module)
 // import authRoutes from './modules/auth/auth.routes.js';
@@ -34,6 +35,7 @@ app.use(loggerMiddleware);
 app.use('/api/organizations', orgsRoutes);
 app.use('/api/organizations/:orgId/api-keys', apikeysRoutes);
 app.use('/api/organizations/:orgId/logs', logsRoutes);
+app.use('/api/organizations/:orgId/webhooks', webhooksRoutes);
 
 // ── Rate limiting — block IPs hammering the API
 app.use(rateLimit({

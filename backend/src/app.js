@@ -10,6 +10,7 @@ import usersRoutes from './modules/users/users.routes.js';
 import orgsRoutes from './modules/organizations/organizations.routes.js';
 import projectsRoutes from './modules/projects/projects.routes.js';
 import apikeysRoutes from './modules/apikeys/apikeys.routes.js';
+import logsRoutes from './modules/logs/logs.routes.js';
 
 // Import routes (we'll add these as we build each module)
 // import authRoutes from './modules/auth/auth.routes.js';
@@ -32,6 +33,7 @@ app.use(express.json());
 app.use(loggerMiddleware);
 app.use('/api/organizations', orgsRoutes);
 app.use('/api/organizations/:orgId/api-keys', apikeysRoutes);
+app.use('/api/organizations/:orgId/logs', logsRoutes);
 
 // ── Rate limiting — block IPs hammering the API
 app.use(rateLimit({

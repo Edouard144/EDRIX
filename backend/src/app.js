@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { CONSTANTS } from './config/constants.js';
+import { ENV } from './config/env.js';
 import { loggerMiddleware } from './middleware/logger.middleware.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 import authRoutes from './modules/auth/auth.routes.js';
@@ -24,7 +25,7 @@ app.use(helmet());
 
 // ── Allow frontend to call this API
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+  origin: ENV.FRONTEND_URL,
   credentials: true, // Allow cookies
 }));
 

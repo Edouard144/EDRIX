@@ -7,7 +7,9 @@ const { Pool } = pg;
 // Much faster than opening a new connection per request
 const pool = new Pool({
   connectionString: ENV.DATABASE_URL,
-  // SSL config now handled by connection string (sslmode=verify-full)
+  ssl: {
+    rejectUnauthorized: false,
+  },
   max: 20,        // Max 20 connections open at once
   idleTimeoutMillis: 30000,  // Close idle connections after 30s
   connectionTimeoutMillis: 10000, // 10 seconds - realistic for cloud DBs

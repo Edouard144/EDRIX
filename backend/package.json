@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test:users": "node tests/users.test.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node tests/users.test.js && node tests/organizations.test.js && node tests/projects.test.js && node tests/apikeys.test.js && node tests/logs.test.js && node tests/webhooks.test.js && node tests/billing.test.js",
     "test:orgs": "node tests/organizations.test.js",
     "dev": "nodemon server.js",
     "start": "node server.js",

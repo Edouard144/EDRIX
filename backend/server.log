@@ -2,3 +2,10 @@
 ✅ Database connected
 🚀 EDRIX API running on http://localhost:5000
 🌍 Environment: development
+🔴 Error: Connection terminated due to connection timeout
+🔴 POST /api/auth/register 500 — 10031ms
+📧 Verify token for test@example.com: 1ac93f8bf8ff35ef216d03206d42db003f69be4f50959852cb63374abe9810f2
+🟢 POST /api/auth/register 201 — 7254ms
+🔴 Error: read ECONNRESET
+🔴 POST /api/auth/login 500 — 3043ms
+🟢 POST /api/auth/login 200 — 5841ms

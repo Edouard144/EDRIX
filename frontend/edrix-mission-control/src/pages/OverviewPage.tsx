@@ -3,6 +3,10 @@ import { StatCard } from "@/components/modules/overview/StatCard";
 import { EdrixBadge } from "@/components/edrix/EdrixBadge";
 import { EdrixCard } from "@/components/edrix/EdrixCard";
 import { useAuthStore } from "@/store/auth.store";
+import { useOrgs } from "@/hooks/useOrgs";
+import { useLogs } from "@/hooks/useLogs";
+import { useJobs } from "@/hooks/useJobs";
+import { useBilling } from "@/hooks/useBilling";
 import { AlertTriangle } from "lucide-react";
 import { EdrixButton } from "@/components/edrix/EdrixButton";
 
@@ -17,15 +21,13 @@ interface RequestRow {
   id: number; method: string; path: string; status: number; latency: string; time: string;
 }
 
-const healthServices = [
-  { name: "Auth", status: "UP" },
-  { name: "Jobs", status: "UP" },
-  { name: "Webhooks", status: "UP" },
-  { name: "Billing", status: "UP" },
-];
-
 const OverviewPage = () => {
   const user = useAuthStore((s) => s.user);
+  const { orgs } = useOrgs();
+  const { stats: logStats } = useLogs({});
+  const { jobs } = useJobs('running');
+  const { usage } = useBilling();
+  
   const [requests, setRequests] = useState<RequestRow[]>([]);
 
   useEffect(() => {
@@ -57,30 +59,34 @@ const OverviewPage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const runningJobs = jobs?.length || 0;
+
   return (
     <div className="space-y-6 animate-fade-slide-up">
       <div>
-        <h1 className="font-syne font-bold text-3xl text-foreground">Welcome back, {user?.name || 'Developer'}</h1>
+        <h1 className="font-syne font-bold text-3xl text-foreground">Welcome back, {user?.full_name || 'Developer'}</h1>
         <p className="font-mono text-sm text-muted-foreground mt-1">Here's your infrastructure at a glance.</p>
       </div>
 
-      {/* Stat cards */}
+      {/* Stat cards - using real data from hooks */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
-        <StatCard label="Organizations" value="3" subtitle="+1 this month" />
-        <StatCard label="API Requests Today" value="14,823" subtitle="↑ 12% from yesterday" />
-        <StatCard label="Active Jobs" value="7" subtitle="2 running, 5 pending" />
-        <StatCard label="Monthly Spend" value="$482.50" subtitle="Est. total: $1,240" />
+        <StatCard label="Organizations" value={String(orgs.length)} subtitle="+1 this month" />
+        <StatCard label="API Requests Today" value={logStats?.total_requests?.toLocaleString() || "0"} subtitle="↑ from baseline" />
+        <StatCard label="Active Jobs" value={String(runningJobs)} subtitle="running now" />
+        <StatCard label="Monthly Spend" value={usage ? `$${usage.total?.toFixed(2) || '0.00'}` : "$0.00"} subtitle="Est. total" />
       </div>
 
-      {/* Anomaly banner */}
-      <div className="flex items-center gap-3 border border-warning/30 bg-warning/5 rounded-lg px-5 py-3">
-        <AlertTriangle size={18} className="text-warning flex-shrink-0" />
-        <div className="flex-1">
-          <p className="text-sm font-mono text-warning">ANOMALY DETECTED</p>
-          <p className="text-xs font-mono text-muted-foreground">Unusual spike in 5xx errors on /api/v1/jobs endpoint — 340% above baseline</p>
+      {/* Anomaly banner - could be conditionally rendered based on real data */}
+      {logStats?.error_rate && logStats.error_rate > 10 && (
+        <div className="flex items-center gap-3 border border-warning/30 bg-warning/5 rounded-lg px-5 py-3">
+          <AlertTriangle size={18} className="text-warning flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-mono text-warning">ANOMALY DETECTED</p>
+            <p className="text-xs font-mono text-muted-foreground">Error rate is {logStats.error_rate}% — above baseline</p>
+          </div>
+          <EdrixButton variant="outline" size="sm">Investigate</EdrixButton>
         </div>
-        <EdrixButton variant="outline" size="sm">Investigate</EdrixButton>
-      </div>
+      )}
 
       {/* Live request feed */}
       <EdrixCard>
@@ -117,19 +123,38 @@ const OverviewPage = () => {
         </div>
       </EdrixCard>
 
-      {/* System Health */}
+      {/* System Health - could come from a health check endpoint */}
       <div>
         <h2 className="font-syne font-bold text-lg text-foreground mb-3">System Health</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 stagger-children">
-          {healthServices.map((svc) => (
-            <EdrixCard key={svc.name} className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5 rounded-full bg-success animate-pulse-glow" />
-              <div>
-                <p className="text-sm font-mono text-foreground">{svc.name}</p>
-                <p className="text-xs font-mono text-success">{svc.status}</p>
-              </div>
-            </EdrixCard>
-          ))}
+          <EdrixCard className="flex items-center gap-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-success animate-pulse-glow" />
+            <div>
+              <p className="text-sm font-mono text-foreground">Auth</p>
+              <p className="text-xs font-mono text-success">UP</p>
+            </div>
+          </EdrixCard>
+          <EdrixCard className="flex items-center gap-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-success animate-pulse-glow" />
+            <div>
+              <p className="text-sm font-mono text-foreground">Jobs</p>
+              <p className="text-xs font-mono text-success">UP</p>
+            </div>
+          </EdrixCard>
+          <EdrixCard className="flex items-center gap-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-success animate-pulse-glow" />
+            <div>
+              <p className="text-sm font-mono text-foreground">Webhooks</p>
+              <p className="text-xs font-mono text-success">UP</p>
+            </div>
+          </EdrixCard>
+          <EdrixCard className="flex items-center gap-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-success animate-pulse-glow" />
+            <div>
+              <p className="text-sm font-mono text-foreground">Billing</p>
+              <p className="text-xs font-mono text-success">UP</p>
+            </div>
+          </EdrixCard>
         </div>
       </div>
     </div>

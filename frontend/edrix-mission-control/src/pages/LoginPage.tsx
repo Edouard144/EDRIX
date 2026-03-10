@@ -1,22 +1,29 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { EdrixLogo } from "@/components/EdrixLogo";
 import { EdrixInput } from "@/components/edrix/EdrixInput";
 import { EdrixButton } from "@/components/edrix/EdrixButton";
-import { useAuthStore } from "@/store/auth.store";
+import { useAuth } from "@/hooks/useAuth";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const login = useAuthStore((s) => s.login);
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!email || !password) { setError("All fields are required."); return; }
-    login(email, password);
-    navigate("/overview");
+    
+    setLoading(true);
+    try {
+      await login(email, password);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Login failed");
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,7 +41,9 @@ const LoginPage = () => {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <EdrixInput label="Email" type="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           <EdrixInput label="Password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <EdrixButton type="submit" className="w-full mt-2">Sign In</EdrixButton>
+          <EdrixButton type="submit" className="w-full mt-2" disabled={loading}>
+            {loading ? "Signing in..." : "Sign In"}
+          </EdrixButton>
         </form>
         <p className="text-xs font-mono text-muted-foreground mt-6 text-center">
           Don't have an account?{" "}

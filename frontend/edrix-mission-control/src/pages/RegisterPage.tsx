@@ -1,23 +1,30 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { EdrixLogo } from "@/components/EdrixLogo";
 import { EdrixInput } from "@/components/edrix/EdrixInput";
 import { EdrixButton } from "@/components/edrix/EdrixButton";
-import { useAuthStore } from "@/store/auth.store";
+import { useAuth } from "@/hooks/useAuth";
 
 const RegisterPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const login = useAuthStore((s) => s.login);
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!name || !email || !password) { setError("All fields are required."); return; }
-    login(email, password);
-    navigate("/overview");
+    
+    setLoading(true);
+    try {
+      await register(name, email, password);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Registration failed");
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,7 +39,9 @@ const RegisterPage = () => {
           <EdrixInput label="Full Name" placeholder="Jane Doe" value={name} onChange={(e) => setName(e.target.value)} />
           <EdrixInput label="Email" type="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           <EdrixInput label="Password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <EdrixButton type="submit" className="w-full mt-2">Create Account</EdrixButton>
+          <EdrixButton type="submit" className="w-full mt-2" disabled={loading}>
+            {loading ? "Creating account..." : "Create Account"}
+          </EdrixButton>
         </form>
         <p className="text-xs font-mono text-muted-foreground mt-6 text-center">
           Already have an account? <Link to="/login" className="text-primary hover:underline">Sign in</Link>

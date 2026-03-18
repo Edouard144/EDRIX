@@ -49,14 +49,19 @@ export const useBilling = () => {
 
   // Change plan
   const changePlan = useMutation({
-    mutationFn: (plan: string) =>
-      api.patch(`/organizations/${orgId}/billing/subscription`, { plan }),
+    mutationFn: (plan: string) => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.patch(`/organizations/${orgId}/billing/subscription`, { plan });
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['subscription', orgId] }),
   });
 
   // Generate invoice
   const generateInvoice = useMutation({
-    mutationFn: () => api.post(`/organizations/${orgId}/billing/invoices/generate`),
+    mutationFn: () => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.post(`/organizations/${orgId}/billing/invoices/generate`);
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invoices', orgId] }),
   });
 

@@ -44,8 +44,10 @@ export const useLogs = (filters: LogFilters = {}) => {
 
   // Write a log manually
   const writeLog = useMutation({
-    mutationFn: (log: { level: string; message: string; source?: string; metadata?: object }) =>
-      api.post(`/organizations/${orgId}/logs`, log),
+    mutationFn: (log: { level: string; message: string; source?: string; metadata?: object }) => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.post(`/organizations/${orgId}/logs`, log);
+    },
   });
 
   return {

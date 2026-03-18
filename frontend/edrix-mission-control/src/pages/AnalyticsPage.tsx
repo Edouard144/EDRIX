@@ -1,36 +1,10 @@
 import { useState } from "react";
-import { AreaChart, Area, LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { useLogs } from "@/hooks/useLogs";
+import { useBilling } from "@/hooks/useBilling";
 import { EdrixCard } from "@/components/edrix/EdrixCard";
+import { Loader2 } from "lucide-react";
 
 const timeRanges = ["1H", "24H", "7D", "30D"] as const;
-
-const requestData = Array.from({ length: 24 }, (_, i) => ({
-  hour: `${i}:00`,
-  requests: Math.floor(Math.random() * 800 + 200),
-}));
-
-const errorData = Array.from({ length: 24 }, (_, i) => ({
-  hour: `${i}:00`,
-  rate: parseFloat((Math.random() * 3).toFixed(2)),
-}));
-
-const latencyData = [
-  { range: "0-50ms", count: 4521 },
-  { range: "50-100ms", count: 3210 },
-  { range: "100-200ms", count: 1892 },
-  { range: "200-500ms", count: 834 },
-  { range: "500ms-1s", count: 231 },
-  { range: "1s+", count: 45 },
-];
-
-const geoData = [
-  { country: "United States", requests: "5,241", pct: "35.3%" },
-  { country: "Germany", requests: "2,134", pct: "14.4%" },
-  { country: "Japan", requests: "1,892", pct: "12.8%" },
-  { country: "United Kingdom", requests: "1,456", pct: "9.8%" },
-  { country: "Brazil", requests: "1,123", pct: "7.6%" },
-  { country: "India", requests: "987", pct: "6.7%" },
-];
 
 const tooltipStyle = {
   contentStyle: { backgroundColor: '#0f0f0f', border: '1px solid #1a1a1a', borderRadius: '6px', fontFamily: 'DM Mono', fontSize: '11px' },
@@ -38,7 +12,14 @@ const tooltipStyle = {
 };
 
 const AnalyticsPage = () => {
-  const [range, setRange] = useState("24H");
+  const [range, setRange] = useState<typeof timeRanges[number]>("24H");
+  const hours = range === "1H" ? 1 : range === "24H" ? 24 : range === "7D" ? 168 : 720;
+  const { stats, isLoading } = useLogs({});
+  const { usage } = useBilling();
+
+  const totalRequests = stats ? (Number(stats.info) + Number(stats.warn) + Number(stats.error) + Number(stats.debug)) : 0;
+  const errorCount = Number(stats?.error) || 0;
+  const errorRate = totalRequests > 0 ? ((errorCount / totalRequests) * 100).toFixed(2) : "0.00";
 
   return (
     <div className="space-y-6 animate-fade-slide-up">
@@ -59,66 +40,89 @@ const AnalyticsPage = () => {
         </div>
       </div>
 
-      {/* Request Volume */}
-      <EdrixCard>
-        <h3 className="font-syne font-bold text-foreground mb-4">Request Volume</h3>
-        <ResponsiveContainer width="100%" height={250}>
-          <AreaChart data={requestData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
-            <XAxis dataKey="hour" tick={{ fill: '#555', fontSize: 10, fontFamily: 'DM Mono' }} axisLine={{ stroke: '#1a1a1a' }} />
-            <YAxis tick={{ fill: '#555', fontSize: 10, fontFamily: 'DM Mono' }} axisLine={{ stroke: '#1a1a1a' }} />
-            <Tooltip {...tooltipStyle} />
-            <Area type="monotone" dataKey="requests" stroke="#00f5ff" fill="#00f5ff" fillOpacity={0.1} strokeWidth={2} />
-          </AreaChart>
-        </ResponsiveContainer>
-      </EdrixCard>
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="animate-spin text-primary" size={32} />
+        </div>
+      ) : (
+        <>
+          {/* Key Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <EdrixCard>
+              <p className="text-xs font-mono text-muted-foreground mb-1">TOTAL REQUESTS</p>
+              <p className="text-2xl font-syne font-bold text-primary">{totalRequests.toLocaleString()}</p>
+            </EdrixCard>
+            <EdrixCard>
+              <p className="text-xs font-mono text-muted-foreground mb-1">ERROR RATE</p>
+              <p className="text-2xl font-syne font-bold text-destructive">{errorRate}%</p>
+            </EdrixCard>
+            <EdrixCard>
+              <p className="text-xs font-mono text-muted-foreground mb-1">ERRORS</p>
+              <p className="text-2xl font-syne font-bold text-destructive">{errorCount}</p>
+            </EdrixCard>
+            <EdrixCard>
+              <p className="text-xs font-mono text-muted-foreground mb-1">AVG LATENCY</p>
+              <p className="text-2xl font-syne font-bold text-primary">--</p>
+            </EdrixCard>
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Error Rate */}
-        <EdrixCard>
-          <h3 className="font-syne font-bold text-foreground mb-4">Error Rate (%)</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={errorData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
-              <XAxis dataKey="hour" tick={{ fill: '#555', fontSize: 10, fontFamily: 'DM Mono' }} axisLine={{ stroke: '#1a1a1a' }} />
-              <YAxis tick={{ fill: '#555', fontSize: 10, fontFamily: 'DM Mono' }} axisLine={{ stroke: '#1a1a1a' }} />
-              <Tooltip {...tooltipStyle} />
-              <Line type="monotone" dataKey="rate" stroke="#ff4444" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </EdrixCard>
+          {/* Log Level Distribution */}
+          <EdrixCard>
+            <h3 className="font-syne font-bold text-foreground mb-4">Log Level Distribution</h3>
+            {stats ? (
+              <div className="grid grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-secondary/30 rounded-lg">
+                  <p className="text-3xl font-syne font-bold text-info">{stats.info || 0}</p>
+                  <p className="text-xs font-mono text-muted-foreground">INFO</p>
+                </div>
+                <div className="text-center p-4 bg-secondary/30 rounded-lg">
+                  <p className="text-3xl font-syne font-bold text-warning">{stats.warn || 0}</p>
+                  <p className="text-xs font-mono text-muted-foreground">WARN</p>
+                </div>
+                <div className="text-center p-4 bg-secondary/30 rounded-lg">
+                  <p className="text-3xl font-syne font-bold text-destructive">{stats.error || 0}</p>
+                  <p className="text-xs font-mono text-muted-foreground">ERROR</p>
+                </div>
+                <div className="text-center p-4 bg-secondary/30 rounded-lg">
+                  <p className="text-3xl font-syne font-bold text-muted-foreground">{stats.debug || 0}</p>
+                  <p className="text-xs font-mono text-muted-foreground">DEBUG</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No data available</p>
+            )}
+          </EdrixCard>
 
-        {/* Latency Distribution */}
-        <EdrixCard>
-          <h3 className="font-syne font-bold text-foreground mb-4">Latency Distribution</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={latencyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
-              <XAxis dataKey="range" tick={{ fill: '#555', fontSize: 9, fontFamily: 'DM Mono' }} axisLine={{ stroke: '#1a1a1a' }} />
-              <YAxis tick={{ fill: '#555', fontSize: 10, fontFamily: 'DM Mono' }} axisLine={{ stroke: '#1a1a1a' }} />
-              <Tooltip {...tooltipStyle} />
-              <Bar dataKey="count" fill="#00f5ff" radius={[3, 3, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </EdrixCard>
-      </div>
-
-      {/* Geo breakdown */}
-      <EdrixCard>
-        <h3 className="font-syne font-bold text-foreground mb-4">Geographic Breakdown</h3>
-        <table className="w-full text-xs font-mono">
-          <thead><tr className="border-b border-border text-muted-foreground"><th className="text-left py-2">COUNTRY</th><th className="text-right py-2">REQUESTS</th><th className="text-right py-2">% TOTAL</th></tr></thead>
-          <tbody>
-            {geoData.map((g) => (
-              <tr key={g.country} className="border-b border-border/30">
-                <td className="py-2 text-foreground">{g.country}</td>
-                <td className="py-2 text-right text-muted-foreground">{g.requests}</td>
-                <td className="py-2 text-right text-primary">{g.pct}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </EdrixCard>
+          {/* Usage Stats */}
+          {usage && (
+            <EdrixCard>
+              <h3 className="font-syne font-bold text-foreground mb-4">Usage This Month</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-xs font-mono text-muted-foreground">API REQUESTS</p>
+                  <p className="text-xl font-syne font-bold text-foreground">{usage.requests_used?.toLocaleString() || 0}</p>
+                  <p className="text-xs font-mono text-muted-foreground">of {usage.requests_limit?.toLocaleString() || 0}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-mono text-muted-foreground">STORAGE</p>
+                  <p className="text-xl font-syne font-bold text-foreground">{usage.storage_used_mb?.toFixed(2) || 0} MB</p>
+                  <p className="text-xs font-mono text-muted-foreground">of {usage.storage_limit_mb?.toFixed(2) || 0} MB</p>
+                </div>
+                <div>
+                  <p className="text-xs font-mono text-muted-foreground">WEBHOOKS</p>
+                  <p className="text-xl font-syne font-bold text-foreground">{usage.webhooks_used || 0}</p>
+                  <p className="text-xs font-mono text-muted-foreground">of {usage.webhooks_limit || 0}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-mono text-muted-foreground">TEAM MEMBERS</p>
+                  <p className="text-xl font-syne font-bold text-foreground">{usage.members_used || 0}</p>
+                  <p className="text-xs font-mono text-muted-foreground">of {usage.members_limit || 0}</p>
+                </div>
+              </div>
+            </EdrixCard>
+          )}
+        </>
+      )}
     </div>
   );
 };

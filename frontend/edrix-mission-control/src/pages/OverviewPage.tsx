@@ -10,56 +10,27 @@ import { useBilling } from "@/hooks/useBilling";
 import { AlertTriangle } from "lucide-react";
 import { EdrixButton } from "@/components/edrix/EdrixButton";
 
-const methods = ["GET", "POST", "DELETE", "PATCH"] as const;
-const paths = ["/api/v1/users", "/api/v1/projects", "/api/v1/auth/login", "/api/v1/jobs/run", "/api/v1/webhooks", "/api/v1/billing/invoices", "/api/v1/logs"];
-const statuses = [200, 200, 200, 200, 201, 400, 500, 200, 304];
-
 const methodColor: Record<string, string> = { GET: "info", POST: "success", DELETE: "danger", PATCH: "warning" };
 const statusColor = (s: number) => s < 300 ? "success" : s < 500 ? "warning" : "danger";
-
-interface RequestRow {
-  id: number; method: string; path: string; status: number; latency: string; time: string;
-}
 
 const OverviewPage = () => {
   const user = useAuthStore((s) => s.user);
   const { orgs } = useOrgs();
-  const { stats: logStats } = useLogs({});
+  const { logs, stats: logStats } = useLogs({});
   const { jobs } = useJobs('running');
   const { usage } = useBilling();
   
-  const [requests, setRequests] = useState<RequestRow[]>([]);
-
-  useEffect(() => {
-    // Init with some rows
-    const initial: RequestRow[] = Array.from({ length: 6 }, (_, i) => ({
-      id: i,
-      method: methods[Math.floor(Math.random() * methods.length)],
-      path: paths[Math.floor(Math.random() * paths.length)],
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-      latency: `${Math.floor(Math.random() * 200 + 10)}ms`,
-      time: new Date().toLocaleTimeString(),
-    }));
-    setRequests(initial);
-
-    const interval = setInterval(() => {
-      setRequests((prev) => {
-        const newRow: RequestRow = {
-          id: Date.now(),
-          method: methods[Math.floor(Math.random() * methods.length)],
-          path: paths[Math.floor(Math.random() * paths.length)],
-          status: statuses[Math.floor(Math.random() * statuses.length)],
-          latency: `${Math.floor(Math.random() * 200 + 10)}ms`,
-          time: new Date().toLocaleTimeString(),
-        };
-        return [newRow, ...prev].slice(0, 20);
-      });
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   const runningJobs = jobs?.length || 0;
+
+  // Transform logs to request rows
+  const requests = logs.slice(0, 20).map((log: any, i: number) => ({
+    id: log.id || i,
+    method: log.method || 'GET',
+    path: log.path || '/api/unknown',
+    status: log.status || 200,
+    latency: log.duration ? `${log.duration}ms` : '0ms',
+    time: log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString(),
+  }));
 
   return (
     <div className="space-y-6 animate-fade-slide-up">

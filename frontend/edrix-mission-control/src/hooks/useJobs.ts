@@ -41,15 +41,19 @@ export const useJobs = (statusFilter?: string) => {
 
   // Create job
   const createJob = useMutation({
-    mutationFn: ({ name, payload }: { name: string; payload?: object }) =>
-      api.post(`/organizations/${orgId}/jobs`, { name, payload }),
+    mutationFn: ({ name, payload }: { name: string; payload?: object }) => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.post(`/organizations/${orgId}/jobs`, { name, payload });
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['jobs', orgId] }),
   });
 
   // Retry dead letter job
   const retryJob = useMutation({
-    mutationFn: (jobId: string) =>
-      api.post(`/organizations/${orgId}/jobs/${jobId}/retry`),
+    mutationFn: (jobId: string) => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.post(`/organizations/${orgId}/jobs/${jobId}/retry`);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs', orgId] });
       queryClient.invalidateQueries({ queryKey: ['dead-letter', orgId] });

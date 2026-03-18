@@ -26,24 +26,34 @@ export const useWebhooks = () => {
   });
 
   const createWebhook = useMutation({
-    mutationFn: ({ name, url, events }: { name: string; url: string; events: string[] }) =>
-      api.post(`/organizations/${orgId}/webhooks`, { name, url, events }),
+    mutationFn: ({ name, url, events }: { name: string; url: string; events: string[] }) => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.post(`/organizations/${orgId}/webhooks`, { name, url, events });
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['webhooks', orgId] }),
   });
 
   const updateWebhook = useMutation({
-    mutationFn: ({ id, ...body }: { id: string; is_active?: boolean; name?: string }) =>
-      api.patch(`/organizations/${orgId}/webhooks/${id}`, body),
+    mutationFn: ({ id, ...body }: { id: string; is_active?: boolean; name?: string }) => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.patch(`/organizations/${orgId}/webhooks/${id}`, body);
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['webhooks', orgId] }),
   });
 
   const deleteWebhook = useMutation({
-    mutationFn: (id: string) => api.delete(`/organizations/${orgId}/webhooks/${id}`),
+    mutationFn: (id: string) => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.delete(`/organizations/${orgId}/webhooks/${id}`);
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['webhooks', orgId] }),
   });
 
   const testWebhook = useMutation({
-    mutationFn: () => api.post(`/organizations/${orgId}/webhooks/test`),
+    mutationFn: () => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.post(`/organizations/${orgId}/webhooks/test`);
+    },
   });
 
   return { webhooks, isLoading, useDeliveries, createWebhook, updateWebhook, deleteWebhook, testWebhook };

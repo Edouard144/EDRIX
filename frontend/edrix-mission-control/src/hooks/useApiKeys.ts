@@ -18,14 +18,18 @@ export const useApiKeys = () => {
 
   const createApiKey = useMutation({
     mutationFn: ({ name, scopes, expires_in_days }:
-      { name: string; scopes: string[]; expires_in_days?: number }) =>
-      api.post(`/organizations/${orgId}/api-keys`, { name, scopes, expires_in_days }),
+      { name: string; scopes: string[]; expires_in_days?: number }) => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.post(`/organizations/${orgId}/api-keys`, { name, scopes, expires_in_days });
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['api-keys', orgId] }),
   });
 
   const revokeApiKey = useMutation({
-    mutationFn: (keyId: string) =>
-      api.delete(`/organizations/${orgId}/api-keys/${keyId}`),
+    mutationFn: (keyId: string) => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.delete(`/organizations/${orgId}/api-keys/${keyId}`);
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['api-keys', orgId] }),
   });
 

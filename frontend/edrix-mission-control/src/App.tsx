@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useAuthStore } from '@/store/auth.store';
+import { useUIStore } from '@/store/ui.store';
+import api from '@/lib/api';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 // Pages
@@ -43,10 +45,17 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
 
 function AppInit() {
   const { fetchMe, token } = useAuthStore();
+  const { setOrgs } = useUIStore();
 
-  // On app load — verify token is still valid
+  // On app load — verify token is still valid and load orgs
   useEffect(() => {
-    if (token) fetchMe();
+    if (token) {
+      fetchMe();
+      // Load orgs immediately so currentOrg is never null
+      api.get('/organizations')
+        .then((r) => setOrgs(r.data.data.orgs))
+        .catch(() => {});
+    }
   }, []);
 
   return null;

@@ -27,17 +27,31 @@ export const useProjects = () => {
     enabled: !!orgId && !!projectId,
   });
 
+  // Environments for a project
+  const useEnvironments = (projectId: string) => useQuery({
+    queryKey: ['environments', projectId],
+    queryFn: async () => {
+      const { data } = await api.get(`/organizations/${orgId}/projects/${projectId}/environments`);
+      return data.data.environments;
+    },
+    enabled: !!orgId && !!projectId,
+  });
+
   // Create project
   const createProject = useMutation({
-    mutationFn: ({ name, description }: { name: string; description?: string }) =>
-      api.post(`/organizations/${orgId}/projects`, { name, description }),
+    mutationFn: ({ name, description }: { name: string; description?: string }) => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.post(`/organizations/${orgId}/projects`, { name, description });
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projects', orgId] }),
   });
 
   // Delete project
   const deleteProject = useMutation({
-    mutationFn: (projectId: string) =>
-      api.delete(`/organizations/${orgId}/projects/${projectId}`),
+    mutationFn: (projectId: string) => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.delete(`/organizations/${orgId}/projects/${projectId}`);
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projects', orgId] }),
   });
 
@@ -55,18 +69,22 @@ export const useProjects = () => {
 
   const setEnvVar = useMutation({
     mutationFn: ({ projectId, environmentId, key, value, is_secret }:
-      { projectId: string; environmentId: string; key: string; value: string; is_secret: boolean }) =>
-      api.post(`/organizations/${orgId}/projects/${projectId}/environments/${environmentId}/vars`,
-        { key, value, is_secret }),
+      { projectId: string; environmentId: string; key: string; value: string; is_secret: boolean }) => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.post(`/organizations/${orgId}/projects/${projectId}/environments/${environmentId}/vars`,
+        { key, value, is_secret });
+    },
     onSuccess: (_, vars) =>
       queryClient.invalidateQueries({ queryKey: ['env-vars', vars.environmentId] }),
   });
 
   const deleteEnvVar = useMutation({
     mutationFn: ({ projectId, environmentId, key }:
-      { projectId: string; environmentId: string; key: string }) =>
-      api.delete(`/organizations/${orgId}/projects/${projectId}/environments/${environmentId}/vars/${key}`),
+      { projectId: string; environmentId: string; key: string }) => {
+      if (!orgId) throw new Error('No organization selected');
+      return api.delete(`/organizations/${orgId}/projects/${projectId}/environments/${environmentId}/vars/${key}`);
+    },
   });
 
-  return { projects, isLoading, useProject, createProject, deleteProject, useEnvVars, setEnvVar, deleteEnvVar };
+  return { projects, isLoading, useProject, useEnvironments, createProject, deleteProject, useEnvVars, setEnvVar, deleteEnvVar };
 };

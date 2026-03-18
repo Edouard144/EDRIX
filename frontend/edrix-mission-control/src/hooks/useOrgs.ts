@@ -34,8 +34,10 @@ export const useOrgs = () => {
 
   // Invite a member
   const inviteMember = useMutation({
-    mutationFn: ({ email, role }: { email: string; role: string }) =>
-      api.post(`/organizations/${currentOrg?.id}/invite`, { email, role }),
+    mutationFn: ({ email, role }: { email: string; role: string }) => {
+      if (!currentOrg?.id) throw new Error('No organization selected');
+      return api.post(`/organizations/${currentOrg.id}/invite`, { email, role });
+    },
   });
 
   // Get audit log

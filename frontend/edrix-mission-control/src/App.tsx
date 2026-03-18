@@ -45,18 +45,22 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
 
 function AppInit() {
   const { fetchMe, token } = useAuthStore();
-  const { setOrgs } = useUIStore();
+  const { setOrgs, setCurrentOrg } = useUIStore();
 
-  // On app load — verify token is still valid and load orgs
   useEffect(() => {
     if (token) {
       fetchMe();
-      // Load orgs immediately so currentOrg is never null
       api.get('/organizations')
-        .then((r) => setOrgs(r.data.data.orgs))
+        .then((r) => {
+          const orgs = r.data.data.orgs;
+          if (orgs.length > 0) {
+            setOrgs(orgs);
+            setCurrentOrg(orgs[0]); // ← set immediately on load
+          }
+        })
         .catch(() => {});
     }
-  }, []);
+  }, [token]); // ← depend on token not []
 
   return null;
 }

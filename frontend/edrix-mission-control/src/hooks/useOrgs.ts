@@ -3,7 +3,7 @@ import { useUIStore } from '@/store/ui.store';
 import api from '@/lib/api';
 
 export const useOrgs = () => {
-  const { setOrgs, currentOrg } = useUIStore();
+  const { setOrgs, setCurrentOrg, currentOrg } = useUIStore();
   const queryClient = useQueryClient();
 
   // Fetch all orgs for current user
@@ -11,8 +11,12 @@ export const useOrgs = () => {
     queryKey: ['orgs'],
     queryFn: async () => {
       const { data } = await api.get('/organizations');
-      setOrgs(data.data.orgs);
-      return data.data.orgs;
+      const orgs = data.data.orgs;
+      setOrgs(orgs);                          // ← sets orgs AND currentOrg
+      if (orgs.length > 0 && !currentOrg) {
+        setCurrentOrg(orgs[0]);
+      }
+      return orgs;
     },
   });
 

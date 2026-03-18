@@ -7,6 +7,8 @@ export const useProjects = () => {
   const queryClient = useQueryClient();
   const orgId = currentOrg?.id;
 
+  console.log('currentOrg:', currentOrg); // ← add this temporarily
+
   // All projects in org
   const { data: projects, isLoading } = useQuery({
     queryKey: ['projects', orgId],

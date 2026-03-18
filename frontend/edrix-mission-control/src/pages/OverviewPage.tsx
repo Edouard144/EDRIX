@@ -25,11 +25,11 @@ const OverviewPage = () => {
   // Transform logs to request rows
   const requests = logs.slice(0, 20).map((log: any, i: number) => ({
     id: log.id || i,
-    method: log.method || 'GET',
-    path: log.path || '/api/unknown',
-    status: log.status || 200,
-    latency: log.duration ? `${log.duration}ms` : '0ms',
-    time: log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString(),
+    method: log.metadata?.method || 'GET',
+    path: log.message?.split(' ')[1] || '/api/unknown',
+    status: log.metadata?.status || 200,
+    latency: log.metadata?.duration_ms ? `${log.metadata.duration_ms}ms` : '—',
+    time: new Date(log.created_at).toLocaleTimeString(),
   }));
 
   return (
@@ -44,7 +44,7 @@ const OverviewPage = () => {
         <StatCard label="Organizations" value={String(orgs.length)} subtitle="+1 this month" />
         <StatCard label="API Requests Today" value={logStats?.total_requests?.toLocaleString() || "0"} subtitle="↑ from baseline" />
         <StatCard label="Active Jobs" value={String(runningJobs)} subtitle="running now" />
-        <StatCard label="Monthly Spend" value={usage ? `$${usage.total?.toFixed(2) || '0.00'}` : "$0.00"} subtitle="Est. total" />
+        <StatCard label="Monthly Spend" value={usage ? `${parseFloat(usage.total_spend || '0').toFixed(2)}` : "$0.00"} subtitle="Est. total" />
       </div>
 
       {/* Anomaly banner - could be conditionally rendered based on real data */}

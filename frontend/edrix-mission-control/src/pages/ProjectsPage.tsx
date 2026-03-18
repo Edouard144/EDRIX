@@ -44,8 +44,8 @@ const ProjectsPage = () => {
                 </div>
                 <p className="text-xs font-mono text-muted-foreground mb-3">{p.slug}</p>
                 <div className="flex gap-2 mb-3">
-                  {p.environments?.map((e: string) => (
-                    <EdrixBadge key={e} variant={envColor[e] as any || "info"}>{e}</EdrixBadge>
+                  {p.environments?.map((e: any) => (
+                    <EdrixBadge key={e.id} variant={envColor[e.slug?.toUpperCase()] as any || "info"}>{e.slug?.toUpperCase()}</EdrixBadge>
                   )) || <EdrixBadge variant="info">DEV</EdrixBadge>}
                 </div>
                 <p className="text-xs font-mono text-muted-foreground">Created {new Date(p.created_at).toLocaleDateString()}</p>

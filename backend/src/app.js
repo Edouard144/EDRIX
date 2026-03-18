@@ -25,8 +25,8 @@ app.use(helmet());
 
 // ── Allow frontend to call this API
 app.use(cors({
-  origin: ENV.FRONTEND_URL,
-  credentials: true, // Allow cookies
+  origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+  credentials: true,
 }));
 
 // ── Parse JSON request bodies
